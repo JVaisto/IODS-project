@@ -1,4 +1,7 @@
 
 # About the project
 
-*Write a short description about the course and add a link to your GitHub repository here. This is an R Markdown (.Rmd) file so you can use R Markdown syntax.*
+*"This is a Massive Open Online Couse (MOOC) meaning that everything you need to complete the course in terms of materials and exercises will be freely available online."* **When I first started to think about learning online. I realize this is good opportunity for me because like all of us I have very limited time to use for learn new skills. MOOC consept is equal for everybody and benefit everybody of us who have "whatever reason" could not come to a traditional classroom setting. There is so much I wish to learn about using R. I have quite good knownledge about biostatistics but I have only very basic skills using R. Online learning does seem to take at least same time than traditional classroom learning, but you can decide when you put your effort on learning. I heard about this course from the UEF´s coordinator of Doctoral Programme in Clinical Research and prof. Reijo Sund.**
+
+You can find my GitHub reposity from [here](https://github.com/JVaisto/IODS-project)
+

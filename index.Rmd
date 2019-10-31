@@ -1,4 +1,5 @@
 ---
+author: "Juuso Väistö"
 title: "IODS course project"
 output:
   html_document:
