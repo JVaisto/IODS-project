@@ -3,13 +3,13 @@
 
 **31.10.2019**
 
-*"This is a Massive Open Online Couse (MOOC) meaning that everything you need to complete the course in terms of materials and exercises will be freely available online."*
+*"This is a Massive Open Online Course (MOOC) meaning that everything you need to complete the course in terms of materials and exercises will be freely available online."*
 
 When I first started to think about learning online. I realized that this is a good opportunity for me because like all of us, as well I have very limited time to use to learn new skills.  MOOC concept is equal for everybody and benefits everybody of us who have "whatever reason" could not come to a traditional classroom setting. There is so much I wish to learn about using R and data analytics. Fortunately, I have quite good basic knowledge about biostatistics but I have only very basic skills using R.   
 
-After the first exercise I found that online learning does seem to take at least the same time as traditional classroom learning, but you can decide when you put your effort on learning. I heard about this course from the UEF´s Doctoral Programme in Clinical Research coordinator and prof. Reijo Sund.
+After the first exercise, I found that online learning does seem to take at least the same time as traditional classroom learning, but you can decide when you put your effort into learning. I heard about this course from the UEF´s Doctoral Programme in Clinical Research coordinator and prof. Reijo Sund.
 
-**You can find my GitHub reposity from [here](https://github.com/JVaisto/IODS-project)**
+**You can find my GitHub repository from [here](https://github.com/JVaisto/IODS-project)**
 
 Br,
 
