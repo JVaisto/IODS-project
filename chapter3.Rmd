@@ -1,0 +1,153 @@
+# Logistic regression
+
+## Data Set Information:
+
+This data approach student achievement in secondary education of two Portuguese schools. The data attributes include student grades, demographic, social and school related features) and it was collected by using school reports and questionnaires. Two datasets are provided regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por). In [Cortez and Silva, 2008], the two datasets were modeled under binary/five-level classification and regression tasks. Important note: the target attribute G3 has a strong correlation with attributes G2 and G1. This occurs because G3 is the final year grade (issued at the 3rd period), while G1 and G2 correspond to the 1st and 2nd period grades. It is more difficult to predict G3 without G2 and G1, but such prediction is much more useful (see paper source for more details).
+
+Source: 
+
+Paulo Cortez, University of Minho, GuimarÃ£es, Portugal, http://www3.dsi.uminho.pt/pcortez
+
+Relevant Papers:
+
+P. Cortez and A. Silva. Using Data Mining to Predict Secondary School Student Performance. In A. Brito and J. Teixeira Eds., Proceedings of 5th FUture BUsiness TEChnology Conference (FUBUTEC 2008) pp. 5-12, Porto, Portugal, April, 2008, EUROSIS, ISBN 978-9077381-39-7.
+
+Let's start working!
+
+```{r}
+# read the data into memory 
+alc <- read.csv("C:/Users/juusov/Documents/IODS-project/Data/alc.csv", header = TRUE, sep = ",")
+# print out the names of the variables in the data
+names(alc)
+```
+
+## Exploring the data
+
+My aim is find out how age, free time after school, current health status, and number of school absences associated with high/low alcohol consumption among students. **My hypothesis is that among heavy drinkers (who are more frequently men than women) have more school absences and free time, they are older, and they have poorer perceived health.** Let's pick the variables we're interested in and look at some basic statistics.
+
+```{r}
+# access the tidyverse libraries dplyr, ggplot2, corrplot, and boot 
+library(tidyr); library(dplyr); library(ggplot2); library(corrplot); library(boot)
+
+# produce mean statistics by group
+alc %>% group_by(sex, high_use) %>% summarise(count = n(), mean_age = mean(age), mean_free_time = mean(freetime), mean_health = mean(health), mean_absence = mean(absences))
+
+```
+
+Results are grouped by sex and high/low alcohol consumption among students. We can see that among female there is 156 low/moderate drinkers and 42 heavy drinkers. Respectively in men there 112 low/moderate drinkers and 72 heavy users. Forunately in both sex there is more low/moderate drinkers than heavy drinkers. See other details from above.
+
+## Boxplots
+
+```{r warning=FALSE}
+# boxplots all populatio
+par(mfrow=c(1,5))
+boxplot(alc$age, main="Age")
+boxplot(alc$freetime, main="Freetime")
+boxplot(alc$health, main=" Current Health Status")
+boxplot(alc$absences, main="Number of School Absences")
+boxplot(alc$alc_use, main="Alcohol using")
+
+# boxplots by sex
+par(mfrow=c(1,5))
+boxplot(alc$age~alc$sex, main="Age")
+boxplot(alc$freetime~alc$sex, main="Freetime")
+boxplot(alc$health~alc$sex, main=" Current Health Status")
+boxplot(alc$absences~alc$sex, main="Number of School Absences")
+boxplot(alc$alc_use~alc$sex, main="Alcohol using")
+
+# boxplots by alcohol high use
+par(mfrow=c(1,4))
+boxplot(alc$age~alc$high_use, main="Age")
+boxplot(alc$freetime~alc$high_use, main="Freetime")
+boxplot(alc$health~alc$high_use, main=" Current Health Status")
+boxplot(alc$absences~alc$high_use, main="Number of School Absences")
+```
+
+```{r warning=FALSE}
+# choose columns to keep for the analyses
+keep_columns <- c("age", "sex", "freetime", "health", "absences", "alc_use", "high_use")
+
+# select the 'alc_subset' to create a new dataset 
+alc_subset <- dplyr::select(alc, one_of(keep_columns))
+
+# draw a bar plot of each variable 
+gather(alc_subset) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar()
+
+```
+
+As we can see from distributions plots and bars only sex and freetime are normally distributed. **My hypothesis is partially true. Male seems to use more alcohol than women. Heavy drinkers are older than moderate drinkers and they have more school absences but there is no diffrences between drinking habits and freetime or current health status.**
+
+## Logistic regression analyses
+
+```{r}
+# model with glm
+m <- glm(alc_subset$high_use ~ alc_subset$age + alc_subset$sex + alc_subset$freetime + alc_subset$health + alc_subset$absences, data = alc, family = "binomial")
+
+#print out summary
+summary(m)
+
+# compute odds ratios (OR)
+OR <- coef(m) %>% exp
+
+# compute confidence intervals (CI)
+CI <- confint(m) %>% exp
+
+# print out the odds ratios with their confidence intervals
+cbind(OR, CI)
+
+```
+
+"When a logistic regression is calculated, the regression coefficient (b1) is the estimated increase in the log odds of the outcome per unit increase in the value of the exposure. In other words, the exponential function of the regression coefficient (eb1) is the odds ratio associated with a one-unit increase in the exposure. An odds ratio (OR) is a measure of association between an exposure and an outcome. The OR represents the odds that an outcome will occur given a particular exposure, compared to the odds of the outcome occurring in the absence of that exposure." (Szumilas M. Explaining odds ratios [published correction appears in J Can Acad Child Adolesc Psychiatry. 2015 Winter;24(1):58]. J Can Acad Child Adolesc Psychiatry. 2010;19(3):227–229.)
+
+## Results of logistic regression model
+
+Let's look at coefficients first. In this case sex, freetime, and school absences significantly associated with alchol high use. If we look at the odds ratios (OR). We can conclude that sex increase 2.36 (136%) times, freetime 1.33 (33%) times, and school absences 1.09 (9%) times risk for alcohol high use. This analysis get us closer to final conclusion. **The hypothesis is still alive partly, now we can say that sex, freetime and school absences statistically associated with higher alcohol consumption in this population.** 
+
+## Prediction and validation
+
+Next we can compare the values predicted with the real values and estimate how good our model is in prediction. In conclusion we can say that the model accuracy is acceptable. 
+
+```{r warning=FALSE}
+#fit the model
+m2 <- glm(high_use ~ sex + freetime + absences, data = alc_subset, family = "binomial")
+
+# predict() the probability of high_use
+probabilities <- predict(m2, type = "response")
+
+# add the predicted probabilities to 'alc_subset'
+alc_subset <- mutate(alc_subset, probability = probabilities)
+
+# use the probabilities to make a prediction of high_use
+alc_subset <- mutate(alc_subset, prediction = probability > 0.5)
+
+# see the last ten original classes, predicted probabilities, and class predictions
+select(alc_subset, sex, freetime, absences, high_use, probability, prediction) %>% tail(20)
+
+# initialize a plot of 'high_use' versus 'probability' in 'alc_subset'
+g <- ggplot(alc_subset, aes(x = probability, y = high_use, col = prediction))
+
+# define the geom as points and draw the plot
+geom_point(col = 'prediction')
+g
+
+# tabulate the target variable versus the predictions
+table(high_use = alc_subset$high_use, prediction = alc_subset$prediction)%>%prop.table()%>%addmargins()
+
+# define a loss function (average prediction error)
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+
+# call loss_func to compute the average number of wrong predictions in the data
+loss_func(class = alc_subset$high_use, prob = alc_subset$probability)
+
+# K-fold cross-validation
+cv <- cv.glm(data = alc_subset, cost = loss_func, glmfit = m, K = 10)
+
+# average number of wrong predictions in the cross validation
+cv$delta[1]
+
+
+
+```
