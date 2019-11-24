@@ -1,0 +1,294 @@
+## Clustering and classification
+
+```{r}
+# access the packages
+library(MASS); library(corrplot); library(tidyr); library(corrplot); library(dplyr); library(ggplot2); 
+
+# load the data
+data("Boston")
+
+# explore the dataset
+dim(Boston)
+str(Boston)
+summary(Boston)
+```
+
+## Data Set Information:
+
+"Boston {MASS}" dataset consist of housing values in suburbs of Boston. The Boston data frame has 506 rows and 14 columns. 
+
+This data frame contains the following variables:
+
+**crim**
+per capita crime rate by town.
+
+**zn**
+proportion of residential land zoned for lots over 25,000 sq.ft.
+
+**indus**
+proportion of non-retail business acres per town.
+
+**chas**
+Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+
+**nox**
+nitrogen oxides concentration (parts per 10 million).
+
+**rm**
+average number of rooms per dwelling.
+
+**age**
+proportion of owner-occupied units built prior to 1940.
+
+**dis**
+weighted mean of distances to five Boston employment centres.
+
+**rad**
+index of accessibility to radial highways.
+
+**tax**
+full-value property-tax rate per \$10,000.
+
+**ptratio**
+pupil-teacher ratio by town.
+
+**black**
+1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.
+
+**lstat**
+lower status of the population (percent).
+
+**medv**
+median value of owner-occupied homes in \$1000s.
+
+```{r}
+# Change the shape of the data from wide-format to long-format
+require(reshape2)
+melt.boston <- melt(Boston)
+head(melt.boston)
+
+# draw a bar plot of each variable
+ggplot(data = melt.boston, aes(x = value)) + stat_density() + facet_wrap(~variable, scales = "free")
+# plot matrix of the Boston dataset variables
+pairs(Boston)
+
+# calculate the correlation matrix of the Boston dataset and round it
+cor_matrix<-cor(Boston) 
+
+# print the correlation matrix
+cor_matrix %>% round(digits = 2)
+
+# visualize the correlation matrix of the dataset
+corrplot(cor_matrix, method="number", type='upper', diag = FALSE)
+```
+
+Several of the variables are highly skewed.In particular, crim, zn, chaz, dis, and black are highly skewed. Some of the others appear to have moderate skewness. The skewed distributions suggests that some transformations on variables could improve performance of variables in the models. We can observe several highly correlated variables in the correlation matrix. We have to be careful with highly correlated variables to avoid overcome their influence in the models. The next thing we need to do is standardize the dataset and print out summaries of the scaled data, then create a categorical variable of the crime rate in the Boston dataset using the quantiles as the break points, drop the old crime rate variable from the dataset, and create training and testing data (80% of the data belongs to the train set).
+
+```{r}
+# center and standardize variables
+boston_scaled <- scale(Boston)
+
+# summaries of the scaled variables
+summary(boston_scaled)
+
+# class of the boston_scaled object
+class(boston_scaled)
+
+# change the object to data frame
+boston_scaled <- as.data.frame(boston_scaled)
+
+# summary of the scaled crime rate
+summary(boston_scaled$crim)
+
+# create a quantile vector of crim and print it
+bins <- quantile(boston_scaled$crim)
+bins
+
+# create a categorical variable 'crime'. Using the quantiles as the break points in the categorical variable.
+crime <- cut(boston_scaled$crim, breaks = bins, include.lowest = TRUE, label=c("low", "med_low", "med_high", "high"))
+
+# remove original crim from the dataset
+boston_scaled <- dplyr::select(boston_scaled, -crim)
+
+# add the new categorical value to scaled data
+boston_scaled <- data.frame(boston_scaled, crime)
+
+# number of rows in the Boston dataset 
+n <- nrow(boston_scaled)
+
+# choose randomly 80% of the rows
+ind <- sample(n,  size = n * 0.8)
+
+# create train set
+train <- boston_scaled[ind,]
+
+# create test set 
+test <- boston_scaled[-ind,]
+
+# save the correct classes from test data
+correct_classes <- test$crime
+
+# remove the crime variable from test data
+test <- dplyr::select(test, -crime)
+```
+
+Now the test data has created. Next we going to fit the linear discriminant analysis on the train dataset. Notice that in this case we have four classes. The LDA algorithm starts by finding directions that maximize the separation between classes, then use these directions to predict the class of individuals. These directions, called linear discriminants, are a linear combinations of predictor variables.
+
+LDA assumes that predictors are normally distributed (Gaussian distribution) and that the different classes have class-specific means and equal variance/covariance.
+
+LDA determines group means and computes, for each individual, the probability of belonging to the different groups. The individual is then affected to the group with the highest probability score.
+
+The lda() outputs contain the following elements:
+
+Prior probabilities of groups: the proportion of training observations in each group. 
+Group means: Shows the mean of each variable in each group.
+Coefficients of linear discriminants: Shows the linear combination of predictor variables that are used to form the LDA decision rule. 
+
+source: http://www.sthda.com/english/articles/36-classification-methods-essentials/146-discriminant-analysis-essentials-in-r/#linear-discriminant-analysis---lda
+
+```{r}
+# linear discriminant analysis
+lda.fit <- lda(crime ~ ., data = train)
+
+# print the lda.fit object
+lda.fit
+
+# the function for lda biplot arrows
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  arrows(x0 = 0, y0 = 0, 
+         x1 = myscale * heads[,choices[1]], 
+         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+
+# target classes as numeric
+classes <- as.numeric(train$crime)
+
+# plot the lda results
+plot(lda.fit, dimen = 2, col = classes, pch = classes)
+lda.arrows(lda.fit, myscale = 2)
+```
+
+The train data was devided in quantiles. The crime variable is as actarget variable. In the plot we see four different clusters. Three of them are in overlapped and one cluster is far away from other clusters. Look at the arrows tells us which of the affect most on the classification (rad, zn, nox) but because there is so much variables it is hard to recognize other variables.
+
+```{r}
+# predict classes with test data
+lda.pred <- predict(lda.fit, newdata = test)
+
+# cross tabulate the results
+table(correct = correct_classes, predicted = lda.pred$class)
+
+#Calculate accuracy percent of the model
+correct_predicts <- 100 * mean(lda.pred$class==correct_classes)
+correct_predicts <- round(correct_predicts, digits = 0)
+
+#Print correct predicts percentage
+print(correct_predicts)
+```
+
+We split our data earlier so that we have the test set and the correct class labels. The prediction model perform on test data is acceptable but not perfect (prediction accuracy is 75%). It predicts high crime rate perfectly but lower rates worse.
+
+```{r}
+# load the data
+data("Boston")
+
+# Standardizing Boston dataset
+scaled_boston <- scale(Boston)
+
+# euclidean distance matrix
+dist_eu <- dist(scaled_boston)
+
+# look at the summary of the distances
+summary(dist_eu)
+
+# manhattan distance matrix
+dist_man <- dist(scaled_boston, method = 'manhattan')
+
+# look at the summary of the distances
+summary(dist_man)
+
+# k-means clustering
+km <-kmeans(scaled_boston, centers = 3)
+
+# plot the scaled_oston dataset with clusters
+pairs(scaled_boston, col = km$cluster)
+
+set.seed(123)
+
+# determine the number of clusters
+k_max <- 10
+
+# calculate the total within sum of squares
+twcss <- sapply(1:k_max, function(k){kmeans(scaled_boston, k)$tot.withinss})
+
+# visualize the results
+qplot(x = 1:k_max, y = twcss, geom = 'line')
+
+# k-means clustering
+km <-kmeans(scaled_boston, centers = 3)
+
+# plot the scaled_boston dataset with clusters
+pairs(scaled_boston, col = km$cluster)
+
+```
+
+I tested many different number of clusters. Based on visualiztion the results suggest that 3 is the optimal number of clusters as it appears to be the bend in the elbow (= when the total WCSS drops radically).
+
+**Bonus**
+
+```{r}
+# load the data
+data("Boston")
+
+# Standardizing Boston dataset
+scaled_kmeans_boston <- scale(Boston)
+
+scaled_kmeans_boston <- as.data.frame(scaled_kmeans_boston)
+
+# k-means clustering
+km <-kmeans(scaled_kmeans_boston, centers = 3)
+
+lda_kmeans <- lda(km$cluster ~ ., data = scaled_kmeans_boston)
+lda_kmeans
+
+# the function for lda biplot arrows
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  arrows(x0 = 0, y0 = 0, 
+         x1 = myscale * heads[,choices[1]], 
+         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+
+# target classes as numeric
+classes <- as.numeric(train$crime)
+
+# plot the lda results
+plot(lda_kmeans, dimen = 2, col = classes, pch = classes)
+lda.arrows(lda_kmeans, myscale = 4)
+```
+
+In the plot we see two overlapped cluster and one cluster which away from other clusters. The arrows tells us thatnox, zn, tax and medv the most influential variables in the model.
+
+**Super Bonus**
+```{r}
+model_predictors <- dplyr::select(train, -crime)
+
+# check the dimensions
+dim(model_predictors)
+dim(lda.fit$scaling)
+
+# matrix multiplication
+matrix_product <- as.matrix(model_predictors) %*% lda.fit$scaling
+matrix_product <- as.data.frame(matrix_product)
+
+library(plotly)
+plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type= 'scatter3d', mode='markers', color = train$crime)
+
+plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type= 'scatter3d', mode='markers', color = classes)
+```
+
+
