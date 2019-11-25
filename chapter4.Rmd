@@ -1,4 +1,4 @@
-## Clustering and classification
+# Clustering and classification
 
 ```{r}
 # access the packages
@@ -13,7 +13,7 @@ str(Boston)
 summary(Boston)
 ```
 
-## Data Set Information:
+## Data Set Information
 
 "Boston {MASS}" dataset consist of housing values in suburbs of Boston. The Boston data frame has 506 rows and 14 columns. 
 
@@ -61,6 +61,8 @@ lower status of the population (percent).
 **medv**
 median value of owner-occupied homes in \$1000s.
 
+## Overview of the data 
+
 ```{r}
 # Change the shape of the data from wide-format to long-format
 require(reshape2)
@@ -83,6 +85,8 @@ corrplot(cor_matrix, method="number", type='upper', diag = FALSE)
 ```
 
 Several of the variables are highly skewed.In particular, crim, zn, chaz, dis, and black are highly skewed. Some of the others appear to have moderate skewness. The skewed distributions suggests that some transformations on variables could improve performance of variables in the models. We can observe several highly correlated variables in the correlation matrix. We have to be careful with highly correlated variables to avoid overcome their influence in the models. The next thing we need to do is standardize the dataset and print out summaries of the scaled data, then create a categorical variable of the crime rate in the Boston dataset using the quantiles as the break points, drop the old crime rate variable from the dataset, and create training and testing data (80% of the data belongs to the train set).
+
+## The dataset standardizing and dividing to training and testing datasets 
 
 ```{r}
 # center and standardize variables
@@ -132,6 +136,8 @@ correct_classes <- test$crime
 test <- dplyr::select(test, -crime)
 ```
 
+## Fit the linear discriminant analysis (LDA) on the train set
+
 Now the test data has created. Next we going to fit the linear discriminant analysis on the train dataset. Notice that in this case we have four classes. The LDA algorithm starts by finding directions that maximize the separation between classes, then use these directions to predict the class of individuals. These directions, called linear discriminants, are a linear combinations of predictor variables.
 
 LDA assumes that predictors are normally distributed (Gaussian distribution) and that the different classes have class-specific means and equal variance/covariance.
@@ -173,6 +179,8 @@ lda.arrows(lda.fit, myscale = 2)
 
 The train data was devided in quantiles. The crime variable is as actarget variable. In the plot we see four different clusters. Three of them are in overlapped and one cluster is far away from other clusters. Look at the arrows tells us which of the affect most on the classification (rad, zn, nox) but because there is so much variables it is hard to recognize other variables.
 
+## Predict the classes with the LDA model on the test data
+
 ```{r}
 # predict classes with test data
 lda.pred <- predict(lda.fit, newdata = test)
@@ -189,6 +197,10 @@ print(correct_predicts)
 ```
 
 We split our data earlier so that we have the test set and the correct class labels. The prediction model perform on test data is acceptable but not perfect (prediction accuracy is 75%). It predicts high crime rate perfectly but lower rates worse.
+
+## K-means clustering
+
+"Clustering is one of the most common exploratory data analysis technique used to get an intuition about the structure of the data. It can be defined as the task of identifying subgroups in the data such that data points in the same subgroup (cluster) are very similar while data points in different clusters are very different. In other words, we try to find homogeneous subgroups within the data such that data points in each cluster are as similar as possible according to a similarity measure such as euclidean-based distance or correlation-based distance. The decision of which similarity measure to use is application-specific." (https://towardsdatascience.com/k-means-clustering-algorithm-applications-evaluation-methods-and-drawbacks-aa03e644b48a)
 
 ```{r}
 # load the data
@@ -236,7 +248,7 @@ pairs(scaled_boston, col = km$cluster)
 
 I tested many different number of clusters. Based on visualiztion the results suggest that 3 is the optimal number of clusters as it appears to be the bend in the elbow (= when the total WCSS drops radically).
 
-**Bonus**
+## Bonus
 
 ```{r}
 # load the data
@@ -273,7 +285,8 @@ lda.arrows(lda_kmeans, myscale = 4)
 
 In the plot we see two overlapped cluster and one cluster which away from other clusters. The arrows tells us thatnox, zn, tax and medv the most influential variables in the model.
 
-**Super Bonus**
+## Super Bonus
+
 ```{r}
 model_predictors <- dplyr::select(train, -crime)
 
