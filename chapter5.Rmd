@@ -68,12 +68,75 @@ pca_human_std
 ```
 
 ```{r}
-# perform principal component analysis (with the SVD method)
+# perform principal component analysis (with the SVD method) without standardizing
+pca_human_not <- prcomp(human)
+
+# draw a biplot of the principal component representation and the original variables
+biplot(pca_human_not, choices = 1:2, cex = c(0.8, 1), col = c("grey40", "deeppink2"))
+```
+
+
+```{r}
+# perform principal component analysis (with the SVD method) with standardizing
 pca_human <- prcomp(human_std)
 
 # draw a biplot of the principal component representation and the original variables
 biplot(pca_human, choices = 1:2, cex = c(0.8, 1), col = c("grey40", "deeppink2"))
 ```
 
-From above you can find principal component analysis (PCA) on the not standardized human (the first one) and with standardizing (the last one). As we 
- 
+From above you can find principal component analysis (PCA) on the not standardized human (the first one) and with standardizing (the last one). PCA will load on the large variances. Because it’s trying to capture the total variance in the set of variables, PCA requires that the input variables have similar scales of measurement. After the scaling (standardizing) all measured on the same scale and the variances will be relatively similar. Due the that it makes sense to standardize variables in the data. 
+
+After stdardizing we can see that all the principal components captured data, before standardizing only two captrured data. A biplot visualizing the connections between two representations of the same data. First, a simple scatter plot is drawn where the observations are represented by two principal components (PC's). Then, arrows are drawn to visualize the connections between the original variables and the PC's. The following connections hold: 1.) The angle between the arrows can be interpret as the correlation between the variables. 2.) The angle between a variable and a PC axis can be interpret as the correlation between the two. 3.)The length of the arrows are proportional to the standard deviations of the variables.
+
+PCA results indicating that PC1 captures 53.6% of the variance in the data while PC2 16.2% variance, so the first two PC's explain about 70 % of the total variance in the data. PC 1 includes Edu.Exp, Mat.Mor, Life.Exp and Ado.Birth. PC2 includes Parli.F and Labo.F. Small angels of the arrows indicate positive correlation between variables (both variables (=arrows) are close to each other). In conclusion we can detect two PC's the first one related to basic life standards and qualities and the second one to genders equality. 
+
+## Multiple Correspondence Analysis (MCA)
+
+```{r}
+# access the package
+library(FactoMineR)
+
+# load the data
+data("tea")
+```
+
+```{r}
+colnames(data)
+str(data)
+dim(data)
+```
+
+Tea dataset includes 36 different variables and 300 observations. Most of the variables are categorical variables. Only the age is a integer. Let´s pickup some variables into the subset of the Tea data. Our aim is use that subset for Multiple Correspondence Analysis (MCA).
+
+```{r}
+# column names to keep in the dataset
+keep_columns <- c("Tea", "How", "how", "sugar", "where", "lunch")
+
+# select the 'keep_columns' to create a new dataset
+tea_time <- dplyr::select(tea, one_of(keep_columns))
+
+# look at the summaries and structure of the data
+summary(tea_time)
+str(tea_time)
+
+# visualize the dataset
+gather(tea_time) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar() + theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+```
+
+The subset includes six diffrent categorical variables ("Tea", "How", "how", "sugar", "where", "lunch"). The dataset contains the answers of a questionnaire on tea consumption. Let's look at the MCA, which  is a method to analyze qualitative data and it is an extension of Correspondence analysis (CA). MCA can be used to detect patterns or structure in the data as well as in dimension reduction.
+
+```{r}
+# multiple correspondence analysis
+mca <- MCA(tea_time, graph = FALSE)
+
+# summary of the model
+summary(mca)
+
+# visualize MCA
+plot(mca, invisible=c("ind"), habillage = "quali")
+```
+
+MCA is for summarizing and visualizing a data table containing more than two categorical variables. It can also be seen as a generalization of principal component analysis when the variables to be analyzed are categorical instead of quantitative (Abdi and Williams 2010). MCA is generally used to analyse a data set from survey. The goal is to identify: 1.) A group of individuals with similar profile in their answers to the questions
+The associations between variable categories (http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/114-mca-multiple-correspondence-analysis-in-r-essentials/).
+
+
