@@ -47,6 +47,8 @@ cor(human)%>%corrplot(method="number", type='upper', diag = FALSE)
 
 Most of the variables are highly skewed. Only two of them are nearly normally distributed (“Edu.Exp” and “Parli.F”). The skewed distributions suggests that some transformations on variables could improve performance of variables in the models. There seeems to be many strong correlation coefficients and some weak correlation coefficients, especially Parli.F.
 
+##PCA
+
 ```{r}
 # perform principal component analysis (with the SVD method)
 pca_human_not_std <- prcomp(human)
@@ -83,6 +85,8 @@ pca_human <- prcomp(human_std)
 # draw a biplot of the principal component representation and the original variables
 biplot(pca_human, choices = 1:2, cex = c(0.8, 1), col = c("grey40", "deeppink2"))
 ```
+
+## Results
 
 From above you can find principal component analysis (PCA) on the not standardized human (the first one) and with standardizing (the last one). PCA will load on the large variances. Because it’s trying to capture the total variance in the set of variables, PCA requires that the input variables have similar scales of measurement. After the scaling (standardizing) all measured on the same scale and the variances will be relatively similar. Due the that it makes sense to standardize variables in the data. 
 
@@ -136,7 +140,10 @@ summary(mca)
 plot(mca, invisible=c("ind"), habillage = "quali")
 ```
 
+## Results
+
 MCA is for summarizing and visualizing a data table containing more than two categorical variables. It can also be seen as a generalization of principal component analysis when the variables to be analyzed are categorical instead of quantitative (Abdi and Williams 2010). MCA is generally used to analyse a data set from survey. The goal is to identify: 1.) A group of individuals with similar profile in their answers to the questions
 The associations between variable categories (http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/114-mca-multiple-correspondence-analysis-in-r-essentials/).
 
+Let´s look at the results. First, two dimensions captured about 30% of the total variance. In the picture, we can see that those variables which are near together correlated positively together and vice-versa. Practically it means for example that people who went to the tea shop use more unpackaged green tea. As well as people who went to the chain store and tea shop use tea bags + unpackaged tea. As well people who only went to the chain store use more likely tea bags.
 
