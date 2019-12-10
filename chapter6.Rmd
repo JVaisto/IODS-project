@@ -329,7 +329,7 @@ anova(fit)
 
 ```
 
-**In coclusion our results indicates that there is no differences between the treatments during the eight weeks period even we taken account for baseline values.**
+**In conclusion our results indicates that there is no differences between the treatments during the eight weeks period even we taken account for baseline values.**
 
 
 
